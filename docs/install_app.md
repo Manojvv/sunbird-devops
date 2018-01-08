@@ -1,42 +1,26 @@
+
 # Deploying application and core services
 
-> please ssh in to app server
+please ssh in to app server
 
 **Prerequisites**
-
 SSL certificates - public or [self-signed](self-signed-certs.md)
+The automated setup also creates a proxy server and like all proxy servers, it will require a SSL certificate. Details of the certificates have to added in the configuration, please see [this wiki](https://github.com/project-sunbird/sunbird-devops/wiki/Updating-SSL-certificates-in-Sunbird-Proxy-service) for details on how to do this. Note: If you don't have SSL certificates and want to get started you could generate and use [self-signed certificates](https://en.wikipedia.org/wiki/Self-signed_certificate), steps for this are detailed in [this wiki](https://github.com/project-sunbird/sunbird-devops/wiki/Generating-a-self-signed-certificate)
 
-```
-vim mysb-devops/ansible/inventories/dev/group_vars/dev
-cd sunbird-devops/deploy
-sudo ./install-deps.sh
-sudo ./deploy-apis.sh /home/ops/mysb-devops/ansible/inventories/dev
-```
+**Steps to setup** 
 
 1. `git clone https://github.com/project-sunbird/sunbird-devops.git`
 
 2. Copy over the configuration directory from the DB server(<implementation-name>-devops) to this machine  
-`scp ops@db_ip:/path/to/<implementation-name>-devops .`
+`scp <username>@<db_ip>:/path/to/<implementation-name>-devops .`
 
-3. Modify all the configurations under # APPLICATION CONFIGURATION block
+3. Modify all the configurations under 
+  #APPLICATION CONFIGURATION
 
-4. The automated setup also creates a proxy server and like all proxy servers, it will require a SSL certificate. Details of the certificates have to added in the configuration, please see [this wiki](https://github.com/project-sunbird/sunbird-devops/wiki/Updating-SSL-certificates-in-Sunbird-Proxy-service) for details on how to do this. Note: If you don't have SSL certificates and want to get started you could generate and use [self-signed certificates](https://en.wikipedia.org/wiki/Self-signed_certificate), steps for this are detailed in [this wiki](https://github.com/project-sunbird/sunbird-devops/wiki/Generating-a-self-signed-certificate)
-
+4. Run the following commands 
 - Run `cd sunbird-devops/deploy`
 - Run `sudo ./install-deps.sh`. This will install dependencies.
 - Run `sudo ./deploy-apis.sh <implementation-name>-devops/ansible/inventories/<environment-name>`. This will onboard various APIs and consumer groups.
-
-_**Error:** Kong apis are not up_
-
-**Changes made to make kong work** 
-
-```
-vim mysb-devops/ansible/inventories/dev/group_vars/dev change  kong_host to node_dns address or ip
-
-ansible/roles/kong-consumer/defaults/main.yml
-
-kong_admin_api_url: "http://localhost:8001" -> kong_admin_api_url: "http://{{kong_host}}:8001"
-```
 
 **Note:** Next 2 steps are necessary only when the application is being deployed for the first time and could be skipped for subsequent deploys.
 
@@ -50,16 +34,16 @@ kong_admin_api_url: "http://localhost:8001" -> kong_admin_api_url: "http://{{kon
 - Obtain API token from Ekstep platform by following steps listed [here](https://github.com/project-sunbird/sunbird-commons/wiki/Obtaining-API-token-for-accessing-ekstep-APIs)
 - Update `sunbird_ekstep_api_key` in your configuration with the API token obtained from ekstep portal
 
-- Keycloak is deployed on vm. RUN `./provision-keycloak.sh <implementation-name>-devops/ansible/inventories/<environment-name>` this script creates the keycloak username,groupname and servicify keycloak service on vm.
+5. Keycloak is deployed on app server. RUN `./provision-keycloak.sh <implementation-name>-devops/ansible/inventories/<environment-name>` this script creates the keycloak username,groupname and servicify keycloak service on vm.
 
 - Update below variables in the config ` <implementation-name>-devops/ansible/inventories/<environment-name>/group_vars/<environment-name>`.
 ```
  keycloak_password: (which admin initial password)
  keycloak_theme_path: ex- path/to/the/nile/themes. Sample themes directory of sunbird can be seen [here](https://github.com/project-sunbird/sunbird-devops/tree/master/ansible/artifacts)
 ```
-- Run `sudo ./deploy-keycloak-vm.sh <implementation-name>-devops/ansible/inventories/<environment-name>`.
+6. Run `sudo ./deploy-keycloak-vm.sh <implementation-name>-devops/ansible/inventories/<environment-name>`.
 
-- Follow the instructions [here](https://github.com/project-sunbird/sunbird-commons/wiki/Keycloak-realm-configuration) to setup auth realm in keycloak
+ Follow the instructions [here](https://github.com/project-sunbird/sunbird-commons/wiki/Keycloak-realm-configuration) to setup auth realm in keycloak
 
 - Update following configs
 
@@ -86,7 +70,13 @@ Sunbird supports customization of home page, logo, and fav icon for the portal. 
 - Create the above folder (e.g. /data/extensions/tenant) on all the docker swarm nodes. Permissions of the folder should be `mode=0775`,`user=root` and `group=root`.
 - This [wiki](https://github.com/project-sunbird/sunbird-commons/wiki/Deploying-Custom-html-pages-and-images) contains the instructions to deploy custom home pages and images.
 
+Make sure all the below configuration blocks are updated. 
+## ENVIRONMENT CONFIGURATION
+## Application server configurations
+## ADVANCED CONFIGURATIONS
+
 ### Deploying Sunbird services
-- Run `sudo ./deploy-core.sh <implementation-name>-devops/ansible/inventories/<environment-name>`. This will setup all the sunbird core services.
-- Run `sudo ./deploy-proxy.sh <implementation-name>-devops/ansible/inventories/<environment-name>`. This will setup sunbird proxy services.
+8. Run `sudo ./deploy-core.sh <implementation-name>-devops/ansible/inventories/<environment-name>`. This will setup all the sunbird core services.
+
+9. Run `sudo ./deploy-proxy.sh <implementation-name>-devops/ansible/inventories/<environment-name>`. This will setup sunbird proxy services.
 
